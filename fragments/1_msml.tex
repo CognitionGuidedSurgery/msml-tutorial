@@ -1,0 +1,104 @@
+\section{MSML Architecture}
+\label{sec:msml-architecture}
+
+
+
+\begin{figure}[htbp]
+  \centering
+  \tikzset{
+    pp state/.style = {draw, black, text width=8em, text height=1.2em,
+      rounded corners, text centered, text depth=.25ex},
+    pp line/.style = {->,draw, line width=0.8 pt},
+    pp border/.style = {dotted}
+  }
+
+  \begin{tikzpicture}[node distance=0.5cm]
+
+    \node[pp state] (model) {MSML Model};
+
+    \node[pp state, above right=0.6cm and -1cm of model] (XML) {XML file};
+    \node[pp state, above left= 0.6cm and -1cm  of model] (py) {Python};
+
+    \node[pp state, below=of model] (bg)    {build graph};
+
+    \node[pp state, below=of bg] (pre) {Preprocessing};
+    \node[pp state, below=of pre] (sim) {Simulation};
+    \node[pp state, below=of sim] (post) {Postprocessing};
+
+    \path[pp line]
+      (py) edge (model)
+      (XML) edge (model)
+      (model) edge (bg)
+      (bg) edge (pre)
+      (pre) edge (sim)
+      (sim) edge (post)
+    ;
+
+
+    \draw[pp border]
+      ($(pre.north west) + (-0.3,0.3)$) rectangle
+      ($(post.south east) + (+0.3,-0.3)$)
+    ;
+
+  \end{tikzpicture}
+
+  \caption{MSML Pipeline}
+  \label{fig:pipeline}
+\end{figure}
+
+
+\begin{figure*}[htbp]
+  \centering
+  \tikzset{
+    uml class/.style = {draw, black, minimum width = 8em, minimum
+      height = 2em, text centered, text depth=.25ex, rectangle},
+    uml class 3/.style = {draw, black, minimum width = 8em, minimum
+      height = 2em, text centered, text depth=.25ex, rectangle split,
+      rectangle split parts=3},
+    uml comp/.style ={>=diamond}
+  }
+  \begin{tikzpicture}
+    %\draw[ultra thin,gray] (-10,-10) grid (10,10);
+
+    \node[uml class] (MF) {MSMLFile};
+
+    \node[uml class,left=of MF] (SO) {SceneObject};
+
+    \node[uml class,right=of MF] (Env) {Environment};
+
+    \node[uml class,above=of MF] (WF) {Workflow};
+
+    \node[uml class,below=of MF] (V) {Variables};
+
+    \newcommand\compositon[2]{
+      \draw [{Diamond}-{Stealth}] #1 -- #2;
+    }
+
+    \draw[{Diamond}-{Stealth}] (V) --
+      node[near end, right]   {1}
+      node[near start, right] {*}
+      (MF);
+
+    \newcommand\associate[4]{
+      \draw[->]
+        #1 edge
+         node[near end, auto ]   {\footnotesize #3}
+         node[near start, auto] {\footnotesize #4}
+         #2;
+     }
+
+     \associate{(MF)}{(Env)}11
+     \associate{(MF)}{(WF)}11
+     \associate{(MF)}{(SO)}*1
+
+
+
+  \end{tikzpicture}
+  \caption{MSML Model}
+  \label{fig:model}
+\end{figure*}
+
+%%% Local Variables:
+%%% mode: pdflatex
+%%% TeX-master: t
+%%% End:

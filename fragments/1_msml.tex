@@ -1,12 +1,42 @@
 \section{MSML Architecture}
 \label{sec:msml-architecture}
 
+We start with the terms, give an overview of the pipeline and end this
+section with the MSMLFile datastructure.
 
+\paragraph{Terms}
 
-\begin{figure}[htbp]
+An \emph{Operator} is a function, that can be used within the
+workflow. The function can be written in C/C++ or Python. We maintain additional
+meta data of the arguments and output in a separate XML
+file. If an Operator is used, it get instantiated with the given
+references to other instances or variables. We call instances of
+Operator a \emph{Task}. \emph{Elements} define additional features,
+like materials or constraints, to your objects in the scene.
+The \emph{Alphabet} contains both, Elements and Operators, with their
+XML meta data. You can add new Operators or Elements to MSML by
+creating new Alphabet entries. The simulation is outsourced to several
+simulation frameworks. The interface between MSML and the frameworks
+is done within several specific \emph{Exporter}. Currently we support
+Sofa, Hiflow, FeBio and Abaqus.
+
+\paragraph{Pipeline}
+\label{sec:pipeline}
+
+Figure~\ref{fig:pipeline} gives an overview about the process.
+MSML takes a data structure as shown in figure~\ref{fig:model}.
+The data structure can allocated from XML or with Python.
+Defining in Python offers more control over the pipeline and is more
+flexible, as you can use parameterized the creation.
+XML is easy, understandable but more fixed.
+
+The first step analyze the data structure for finding errors and
+creating a build graph. The build graph is a directed acyclic
+graph\footnote{it has to be},
+\begin{figure}
   \centering
   \tikzset{
-    pp state/.style = {draw, black, text width=8em, text height=1.2em,
+    pp state/.style = {draw, black, text width=7em, text height=1.2em,
       rounded corners, text centered, text depth=.25ex},
     pp line/.style = {->,draw, line width=0.8 pt},
     pp border/.style = {dotted}
@@ -16,10 +46,10 @@
 
     \node[pp state] (model) {MSML Model};
 
-    \node[pp state, above right=0.6cm and -1cm of model] (XML) {XML file};
-    \node[pp state, above left= 0.6cm and -1cm  of model] (py) {Python};
+    \node[pp state, above right=0.6cm and -1.4cm of model] (XML) {XML file};
+    \node[pp state, above left= 0.6cm and -1.4cm  of model] (py) {Python};
 
-    \node[pp state, below=of model] (bg)    {build graph};
+    \node[pp state, below=of model] (bg)    {Build Graph};
 
     \node[pp state, below=of bg] (pre) {Preprocessing};
     \node[pp state, below=of pre] (sim) {Simulation};
@@ -47,7 +77,22 @@
 \end{figure}
 
 
-\begin{figure*}[htbp]
+
+\paragraph{Data structure}
+\label{sec:data-structure}
+
+
+The MSMLFile gather all information for making a simulation. It
+contains the Workflow, that contains the Task to be executed, the
+environment with parameters for the simulation framework, variables,
+and scene objects. Every scene object is a node in the simulation and
+have constraints, material regions or output.
+
+
+
+
+
+\begin{figure*}
   \centering
   \tikzset{
     uml class/.style = {draw, black, minimum width = 8em, minimum
@@ -70,28 +115,32 @@
 
     \node[uml class,below=of MF] (V) {Variables};
 
+    \node[uml class,above=of WF] (T) {Task};
+
+    \node[uml class,above left=of SO] (C) {Constraints};
+    \node[uml class,left=of SO] (MR) {Material Region};
+    \node[uml class,below left=of SO] (OR) {Output};
+
     \newcommand\compositon[2]{
       \draw [{Diamond}-{Stealth}] #1 -- #2;
     }
 
-    \draw[{Diamond}-{Stealth}] (V) --
-      node[near end, right]   {1}
-      node[near start, right] {*}
-      (MF);
-
-    \newcommand\associate[4]{
-      \draw[->]
-        #1 edge
-         node[near end, auto ]   {\footnotesize #3}
-         node[near start, auto] {\footnotesize #4}
-         #2;
-     }
-
-     \associate{(MF)}{(Env)}11
-     \associate{(MF)}{(WF)}11
-     \associate{(MF)}{(SO)}*1
+    %\draw[{Diamond}-{Stealth}] (V) --
+    %  node[near end, right]   {1}
+    %  node[near start, right] {*}
+    %  (MF);
 
 
+    \umlunicompo[mult=*]{MF}{V}
+    \umluniassoc[anchors=east and west]{MF}{Env}
+    \umluniassoc{MF}{WF}
+    \umluniassoc[mult1=1,mult2=*]{MF}{SO}
+
+    \umlunicompo[mult=]{SO}{C}
+    \umlunicompo[mult=]{SO}{OR}
+    \umlunicompo[mult=]{SO}{MR}
+
+    \umlunicompo[mult=*]{WF}{T}
 
   \end{tikzpicture}
   \caption{MSML Model}
@@ -100,5 +149,5 @@
 
 %%% Local Variables:
 %%% mode: pdflatex
-%%% TeX-master: t
+%%% TeX-master: "../tutorial"
 %%% End:

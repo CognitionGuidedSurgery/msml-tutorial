@@ -1,0 +1,19 @@
+<operator name="closestPoint">
+    <runtime>
+        <python module="closestpoint" function="cp"/>
+    </runtime>
+
+    <input>
+        <arg name="mesh" logical="Mesh" physical="vtk"/>
+    </input>
+
+    <output>
+        <arg name="index" logical="Index" physical="int"/>
+        <arg name="point" logical="Point3D" physical="vector.float"/>
+        <arg name="dist" logical="Distance" physical="float"/>
+    </output>
+
+    <parameters>
+        <arg name="ref" physical="vector.float" logical="Point3D"/>
+    </parameters>
+</operator>

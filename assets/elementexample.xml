@@ -1,0 +1,10 @@
+<element name="surfacePressure" category="constraint">
+    <description>
+        Add pressure load to surface
+    </description>
+
+    <parameters>
+        <arg name="indices" physical="vector.float" />
+        <arg name="pressure" physical="float"/>
+    </parameters>
+</element>

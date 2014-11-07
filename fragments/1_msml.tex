@@ -32,14 +32,33 @@ XML is easy, understandable but more fixed.
 
 The first step analyze the data structure for finding errors and
 creating a build graph. The build graph is a directed acyclic
-graph\footnote{it has to be},
+graph\footnote{You mustn't have cycles.}.
+The generated build graph is checked for consistency of types.
+We try to solve type errors by injecting conversions in the graph.
+Such a graph is in figure~\ref{fig:bunnygraph}.
+
+An \emph{Executor} takes control over the  pre-, postprocessing and
+simulation. It executes the build graph in the correct
+order. Currently We are offering three Executors:
+
+\begin{description}
+\item[LinearSequence] is a simple execution of the task in topological order.
+\item[Parallel] executes a set of independently task in process or
+  thread pool.
+\item[Phase] gives you control, to disable certain phases, task or
+  exporter.
+\end{description}
+
+The distinction between the three phases is a logical separation. The
+build graph only knows nodes, that are tasks, variables or exporter.
+
 \begin{figure}
   \centering
   \tikzset{
     pp state/.style = {draw, black, text width=7em, text height=1.2em,
       rounded corners, text centered, text depth=.25ex},
     pp line/.style = {->,draw, line width=0.8 pt},
-    pp border/.style = {dotted}
+    pp border/.style = {dotted, line width=1pt}
   }
 
   \begin{tikzpicture}[node distance=0.5cm]
@@ -65,6 +84,8 @@ graph\footnote{it has to be},
     ;
 
 
+    \node[rotate=90] at ($(pre.north west) + (-0.5,-0.6)$) (E) {Executor};
+
     \draw[pp border]
       ($(pre.north west) + (-0.3,0.3)$) rectangle
       ($(post.south east) + (+0.3,-0.3)$)
@@ -77,19 +98,25 @@ graph\footnote{it has to be},
 \end{figure}
 
 
-
 \paragraph{Data structure}
 \label{sec:data-structure}
 
 
-The MSMLFile gather all information for making a simulation. It
-contains the Workflow, that contains the Task to be executed, the
-environment with parameters for the simulation framework, variables,
-and scene objects. Every scene object is a node in the simulation and
-have constraints, material regions or output.
+The \emph{MSML File} data structure is the central interface between
+you and MSML. It gathers all information for making a simulation:
 
+\begin{description}
+\item[Workflow] holds the list of Tasks to be executed
+\item[Environment] is the set of parameters and configuration for the
+  simulation system.
+\item[Variables] are reusable placeholders, that allow to create
+  parameterized workflows.
+\item[Scene Object] encapsulates an object in the simulation, that can
+  be enriched by material regions, constraints or output requests.
+\end{description}
 
-
+The structure is visible in the first example~\ref{fig:bunnymsml} and
+figure~\ref{fig:model} shows the cardinality.
 
 
 \begin{figure*}

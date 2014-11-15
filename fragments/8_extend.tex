@@ -60,37 +60,116 @@ one parameter as a list of floats values. This operators delivers
 three different output values.
 Once you added the XML file (figure~\ref{fig:operatorxml}) to the
 alphabet search path or add \lstinline{--alphabet-search-dir} on the
-command line, you should be able to call this operator within MSML:
-\begin{lstlisting}[language=XML,frame=none,numbers=none]
-<closestPoint id="c"
- mesh="${mesh}"
- ref="2.2 3.5 6" />
-\end{lstlisting}
+command line, you should be able to call this operator within MSML
+\lstinline[language=XML]%
+{<closestPoint id="c"  mesh="${mesh}"  ref="2.2 3.5 6"/>}
 
-You can access to every output with \lstinline{${c.distance}}, \lstinline{${c.point}}
+You can access to every output with
+\lstinline{c.distance}, \lstinline{c.point} and \lstinline{c.index}.
 
 \subsection{Element}
 \label{sec:element}
 
-Elements are very special. They describe information in the scene graph and are handled by the exporters. Normally any definition of a new element leads to a change in an exporter.
+An Element defines the semenatics of an entry under constraint,
+material region or output. They should be a disambiguous description
+of their use. Every exporter handles the elements on his own. An
+introduction of an element leads to an adaption of the exporters.
+The Exporter features determines the supported elements.
+Figure~\ref{fig:elementxml} shows an element definition. It consists
+from a name, category, description and parameters. The definition of
+parameters are the same as for operators.
 
-\begin{figure*}
+\begin{figure}
   \centering
   \lstinputlisting[language=XML]{assets/elementexample.xml}
   \caption{Operator Definiton Example}
-  \label{fig:operatorxml}
-\end{figure*}
-
+  \label{fig:elementxml}
+\end{figure}
 
 \subsection{Exporter}
 \label{sec:exporter}
 
+The Exporter are a central point of the system. Their task is to
+create the input for the specific simulation environment, run the
+simulation and provide the calculated output back into the Workflow.
+You can see the Exporter like special operators, that sees the whole
+MSML file data structure and has dynamically input and output slots.
+
+The creation of an Exporter begins with deriving from
+\texttt{msml.exporter.Exporter} (figure~\ref{fig:exporteruml}). The
+Exporter need to call \texttt{initialize} given:
+
+\begin{itemize}
+\item the MSML File data structure,
+\item an exporter name,
+\item supported features
+\item logical and physical mesh sort and
+\item a dictionary describing types of element parameters.
+\end{itemize}
+
+The initialization takes care of creating the appropriate input and
+output slots. The supported features are  a subset of string.
+If you set physical types for every input and output slot, you will
+get the correct on access via \texttt{get\_value\_from\_memory()}.
+
+The next step is \texttt{render()}. This method is
+called first from the Executor. It should transfer the scene structure
+into an appropriate representation for the simulation environment.
+You should not modify the workflow memory or write absolute
+filenames. Everything executed by the Executor has it's working
+directory in the given output directory. The changes you want to make
+should be memorized and returned by \texttt{execute()}.
+There are two ways to access the referenced values from the workflow
+memory: by calling \texttt{get\_value\_from\_memory()} with the correct
+nodes from the scene, or by using the
+\texttt{datamodel}. \texttt{datamodel} is a mirror data structure of scene,
+where the referenced values are injected.
+
+\texttt{execute()} is executed directly after \texttt{render()}, and
+should execute the simulation and converts the results into
+appropriates formats. The later step is only needed if there is no
+automatically conversion defined.
+Figure~\ref{fig:exporterskel} gives an sketch of an exporter.
+
+
+% \begin{itemize}
+% \item Exporter sees whole MSML File data structure
+% \item Exporter traverse data structure, produce simulation files
+% \item allowed to support a subset of features
+% \item To phases \emph{render}, \emph{execute}
+% \item definition of expected types (mesh, output request, parameter
+%   for every element) (default: str)
+% \item like operator with dynamically slots
+% \item Data model
+% \end{itemize}
+
+\begin{figure}
+  \centering
+  \tikzstyle{tikzuml inherit style}=[color=black, -open triangle 45]
+
+  \tikzumlset{fill class=white}
+  \begin{tikzpicture}
+    \umlclass[type=abstract]{Exporter}{%
+      \# msml\_file : MSMLFile\\
+      \# memory    : dict
+      \# datamodel
+    }{%
+      + initialize(name, mesh\_type,\\
+      \quad features, element\_types)\\
+      + get\_value\_from\_memory(element)\\
+      + \umlvirt{render() : void}\\
+      + \umlvirt{execute() : dict}
+    }
+  \end{tikzpicture}
+  \caption{UML Class Exporter}
+  \label{fig:exporteruml}
+\end{figure}
 
 \begin{figure*}
   \centering
   \lstinputlisting[language=Python]{assets/exporterskel.py}
   \caption{Operator Definiton Example}
-  \label{fig:operatorxml}
+  \label{fig:exporterskel}
 \end{figure*}
 
 

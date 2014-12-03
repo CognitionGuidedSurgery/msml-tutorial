@@ -1,52 +1,55 @@
 \section{MSML Architecture}
 \label{sec:msml-architecture}
 
-We start with the terms, give an overview of the pipeline and end this
-section with the MSMLFile datastructure.
+The Medical Simulation Markup Language is capable of describing both the biomechanical model and the workflow that is used to generate the model. The model and workflow description are combined into a single data model. This data model can be either built through a Python API or by providing a single XML file. For most users the XML input file will be the primary interface to the MSML framework. In order to facilitate a better understanding of the tree datastructure that is encoded in the file, we first introduce the model description in this chapter. We also show how additional model features (e.g. new material types) can be easily integrated. We then outline the workflow modeling and its Python implementation. It is highly recommended to use the examples that are provided within the MSML framework (e.g. msml/examples/BunnyExample/bunny.msml.xml) along with the following explanations.
 
-\paragraph{Terms}
+\subsection{Model description}
 
-An \emph{Operator} is a function, that can be used within the
-workflow. The function can be written in C/C++ or Python. We maintain additional
-meta data of the arguments and output in a separate XML
-file. If an Operator is used, it get instantiated with the given
-references to other instances or variables. We call instances of
-Operator a \emph{Task}. \emph{Elements} define additional features,
-like materials or constraints, to your objects in the scene.
-The \emph{Alphabet} contains both, Elements and Operators, with their
-XML meta data. You can add new Operators or Elements to MSML by
-creating new Alphabet entries. The simulation is outsourced to several
-simulation frameworks. The interface between MSML and the frameworks
-is done within several specific \emph{Exporter}. Currently we support
-Sofa, Hiflow, FeBio and Abaqus.
+The MSML model description is designed to cover applications that use numerical methods such as the finite element method (FEM) or the finite volume method (FVM) to solve models based on partial differential equations. These applications include (but are not limited to) solid mechanics problems and fluid mechanics. In order to support a flexible extension, the MSML specification allows to easily introduce new features through a dynamic alphabet in addition to built-in (fixed) definitions.
 
-\paragraph{Pipeline}
+Currently, the MSML defines the following framework in order to describe a biomechanical simulation: The complete simulation scenario is called a \emph{scene}. The scene consists of several \emph{objects}. Each object is described in terms of one (and only one) \emph{mesh}. A \emph{sets} section allows to specify \emph{nodes}, \emph{elements} or \emph{surface} sets. Element sets can be used in the \emph{material} section to define a \emph{region}. Inside this region different material properties can be defined (see following paragraph for details). The \emph{constraint} section of an \emph{object} allows to define constraints, loads and boundary conditions for the object. Finally, output requests (e.g. stress, displacement) can be defined in the \emph{output} section.
+
+In addition to the fixed definitions, the MSML offers a flexible way to add new material properties (\emph{physics\_elements}) as well as new \emph{constraint} and new output requests \emph{output\_elements}. For this purpose the alphabet (located at \emph{msml/share/alphabet}) can be extended with new definitions by providing an XML description. Upon start-up, the MSML framework automatically adds the new definitions to the alphabet. 
+
+\subsection{Numerical Environment}
+
+In addition to the description of the physical simulation model that was discussed in the previous section, the numerical algorithms that discretize and solve the problem have to be chosen. In fact, these choices are typically non-trivial and heavily influence the performance and the stability of the simulation. In the MSML input file, the numerical environment can be specified in the \emph{environment} section.
+
+
+\subsection{Workflow description}
+
+Typically, time-consuming pre-processing has to be done in order to construct biomechanical models. Typical operations in this context include mesh cleaning, mesh generation and boundary condition assignments. Similarly, several post-processing operations are usually performed on the raw simulation results in order to interpret and visualize the results. 
+
+The MSML allows to specify workflows for both pre-processing and post-processing operations. For this purpose so called \emph{Operators} can be combined to form processing pipelines. These pipelines are specified in the \emph{workflow} section of the input file. Additionally variables can be defined in the \emph{variables} section. Defining variables can not only help to make the input file more readable, it also enables you to automatically perform parameter sweeps and optimizations using the MSML.
+
+A key feature of the MSML is the inclusion of new operators by adding an XML-file that describes its inputs, outputs and parameters. In this way operators that are implemented as C/C++ libraries, Python modules or command line programs can be easily integrated into the MSML. Additionally, the MSML framework already includes many useful operators for pre- and postprocessing.
+
+The XML-based descriptions of the operators an be found in the \emph{msml/share/alphabet/msml\_operators} directory. You can also quickly define you own operators as shown in chapter \ref{sec:operator}.
+
+\subsection{Export to different simulation engines}
+
+A major advantage of the MSML platform is the capability to export simulation scenarios to different simulation engines.  Currently, Sofa, Abaqus, HiFlow and FEBio are supported. In this way, the MSML is the perfect tool to run compare different simulation platforms. The generation of the respective input decks is performed by so called \emph{exporters}. Each exporter is described semantically in order to express its capabilities. This allows the framework to check if an exporter is compatible with all elements (e.g. material types, constraints) and all numerical settings that are described in the \emph{environment} section. 
+
+You can also provide your own exporter. This allows to use the MSML as a powerful pre-processor for custom research simulation code. More details on how to do this can be found in section \ref{sec:exporter}.
+
+\subsection{Python implementation}
+
 \label{sec:pipeline}
 
-Figure~\ref{fig:pipeline} gives an overview about the process.
-MSML takes a data structure as shown in figure~\ref{fig:model}.
-The data structure can allocated from XML or with Python.
-Defining in Python offers more control over the pipeline and is more
-flexible, as you can use parameterized the creation.
-XML is easy, understandable but more fixed.
+The core implementation of the MSML handles the processing of the simulation workflow. Figure \ref{fig:pipeline} provides an overview of the process. The MSML takes a data structure as shown in Fig. \ref{fig:model}.
+The data structure can be allocated from XML or with Python.
 
-The first step analyze the data structure for finding errors and
-creating a build graph. The build graph is a directed acyclic
-graph\footnote{You mustn't have cycles.}.
-The generated build graph is checked for consistency of types.
-We try to solve type errors by injecting conversions in the graph.
-Such a graph is in figure~\ref{fig:bunnygraph}.
+The next step is to analyze the data structure in order to find errors and to create a build graph. The build graph is a directed acyclic graph. The generated build graph is then checked for consistency of types. Type errors are resolved by injecting conversions in the graph (e.g. between different surface file formats).
 
-An \emph{Executor} takes control over the  pre-, postprocessing and
-simulation. It executes the build graph in the correct
+An \emph{Executor} takes control over the  pre-, postprocessing and simulation. It executes the build graph in the correct
 order. Currently We are offering three Executors:
 
 \begin{description}
 \item[LinearSequence] is a simple execution of the task in topological order.
-\item[Parallel] executes a set of independently task in process or
+\item[Parallel] executes a set of independent task in process or
   thread pool.
-\item[Phase] gives you control, to disable certain phases, task or
-  exporter.
+\item[Phase] gives you control, to disable certain phases, tasks or
+  exporters.
 \end{description}
 
 The distinction between the three phases is a logical separation. The
@@ -55,7 +58,7 @@ build graph only knows nodes, that are tasks, variables or exporter.
 \begin{figure}
   \centering
   \tikzset{
-    pp state/.style = {draw, black, text width=7em, text height=1.2em,
+    pp state/.style = {draw, black, text width=6.5em, text height=1.2em,
       rounded corners, text centered, text depth=.25ex},
     pp line/.style = {->,draw, line width=0.8 pt},
     pp border/.style = {dotted, line width=1pt}
@@ -98,12 +101,10 @@ build graph only knows nodes, that are tasks, variables or exporter.
 \end{figure}
 
 
-\paragraph{Data structure}
-\label{sec:data-structure}
+\subsection{tl;dr}
 
 
-The \emph{MSML File} data structure is the central interface between
-you and MSML. It gathers all information for making a simulation:
+The \emph{MSML File} data structure is the central interface between you and MSML. It gathers all information for making a simulation:
 
 \begin{description}
 \item[Workflow] holds the list of Tasks to be executed
@@ -115,8 +116,7 @@ you and MSML. It gathers all information for making a simulation:
   be enriched by material regions, constraints or output requests.
 \end{description}
 
-The structure is visible in the first example~\ref{fig:bunnymsml} and
-figure~\ref{fig:model} shows the cardinality.
+The structure shown in Fig. \ref{fig:model}. For more details, we recommend to take a look at the examples that are provided with the MSML framework.
 
 
 \begin{figure*}

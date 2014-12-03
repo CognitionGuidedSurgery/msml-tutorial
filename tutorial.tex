@@ -1,8 +1,8 @@
-\documentclass[twocolumn,10pt,a4paper]{scrartcl}
+\documentclass[a4paper]{article}
 
 \usepackage{xcolor}
 \usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
-\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+%\usepackage{microtype} % Slightly tweak font spacing for aesthetics
 \usepackage[hang, small,labelfont=bf,up,textfont=it,up]{caption} % Custom captions under/above floats in tables or figures
 \usepackage{booktabs} % Horizontal rules in tables
 \usepackage{tikz-uml}
@@ -15,12 +15,12 @@
 \renewcommand{\abstractnamefont}{\normalfont\bfseries} % Set the "Abstract" text to bold
 \renewcommand{\abstracttextfont}{\normalfont\small\itshape} % Set the abstract itself to small italic text
 
-\usepackage{fancyhdr} % Headers and footers
-\pagestyle{fancy} % All pages have headers and footers
-\fancyhead{} % Blank out the default header
-\fancyfoot{} % Blank out the default footer
-%\fancyhead[C]{Running title $\bullet$ November 2012 $\bullet$ Vol. XXI, No. 1} % Custom header text
-\fancyfoot[RO,LE]{\thepage} % Custom footer text
+%\usepackage{fancyhdr} % Headers and footers
+%\pagestyle{fancy} % All pages have headers and footers
+%\fancyhead{} % Blank out the default header
+%\fancyfoot{} % Blank out the default footer
+%%\fancyhead[C]{Running title $\bullet$ November 2012 $\bullet$ Vol. XXI, No. 1} % Custom header text
+%\fancyfoot[RO,LE]{\thepage} % Custom footer text
 
 %
 \usepackage{listings}
@@ -76,7 +76,7 @@
 %----------------------------------------------------------------------------------------
 
 \title{Medical Simulation Markup Language}
-\subtitle{A tutorial introduction}
+%\subtitle{A tutorial introduction}
 
 \author{%
   Nicolai Schoch
@@ -97,26 +97,34 @@
 
 \date{\today}
 %\thispagestyle{fancy} % All pages have headers and footers
-
-\makeatletter
-\twocolumn[
-   \begin{@twocolumnfalse}
+%
+%\makeatletter
+%\twocolumn[
+   %\begin{@twocolumnfalse}
      \maketitle
      \begin{abstract}
+		
+		The Medical Simulation Markup Language offers a generalized and flexible description for biomechanical models. The unique feature of this modeling language is that it not only describes the final biomechanical simulation, but also the workflow how the biomechanical model is constructed from tomographic data. In this way, the MSML can act as a middleware between all tools used in the modeling pipeline. The MSML also ships with many built-in tools for mesh processing, meshing, post-processing and parameter optimization. The functionality of MSML can be accessed using an XML interface as well as through a Python API or raw C++. Some cool stuff you can do with MSML:
+		
+		\begin{itemize}
+		\item Perform mesh cleaning and decimation based on ACVD, CGAL and VCGLib
+			\item Automatically create linear or quadratic tetrahedral meshes from surface models using state-of-the art meshers such as CGAL, Netgen or Tetgen.
+			\item Run your simulation on different engines like Abaqus, SOFA, HiFlow or FEBio.
+			\item Perform parameter optimizations and automatic convergence analysis
+			\item Choose from a big collection of post-processing options and export the results to Paraview
+			\item Easily integrate your own tools and engines
+		\end{itemize}
 
-		 Medical Simulation Markup Language defines....
 
-		 	workflow, medical, simulation
 
-			this tutorial shows example 
-			how to use MSML
-			and extend it
-
+			
      \end{abstract}
-    \end{@twocolumnfalse}
-]
-\makeatother
-\saythanks
+    %\end{@twocolumnfalse}
+%]
+
+\clearpage
+%\makeatother
+%\saythanks
 
 \input{fragments/0_introduction}
 \input{fragments/1_msml}
@@ -131,7 +139,7 @@
 
 
 \bibliographystyle{plain}
-\bibliography{refs.bib}
+\bibliography{refs}
 
 \end{document}
 
